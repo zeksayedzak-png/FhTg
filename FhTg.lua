@@ -1,23 +1,24 @@
 -- =====================================================
--- 🧠 GUI SCANNER & CODE EXTRACTOR
+-- 👆 GUI PICKER & EXTRACTOR
 -- =====================================================
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 
 -- =====================================================
--- واجهة السكريبت نفسه
+-- واجهة السكريبت
 -- =====================================================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "GUIScanner"
+ScreenGui.Name = "GUIPicker"
 ScreenGui.Parent = LocalPlayer.PlayerGui
 ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 400, 0, 350)
-MainFrame.Position = UDim2.new(0.5, -200, 0.3, 0)
+MainFrame.Size = UDim2.new(0, 200, 0, 150)
+MainFrame.Position = UDim2.new(0.5, -100, 0.3, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 MainFrame.BackgroundTransparency = 0.15
 MainFrame.BorderSizePixel = 0
@@ -25,19 +26,19 @@ MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 16)
 
--- شريط العنوان
+-- شريط العنوان (للسحب)
 local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, 0, 0, 35)
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
 TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 TitleBar.BorderSizePixel = 0
 TitleBar.Parent = MainFrame
-Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 10)
 
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(0.8, 0, 1, 0)
-TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.Position = UDim2.new(0, 8, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "🧠 GUI Scanner"
+TitleLabel.Text = "👆 GUI Picker"
 TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 200)
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextSize = 14
@@ -45,85 +46,49 @@ TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = TitleBar
 
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 30, 0, 30)
-CloseBtn.Position = UDim2.new(1, -35, 0, 3)
+CloseBtn.Size = UDim2.new(0, 25, 0, 25)
+CloseBtn.Position = UDim2.new(1, -30, 0, 3)
 CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 CloseBtn.BackgroundTransparency = 1
 CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 16
+CloseBtn.TextSize = 14
 CloseBtn.Parent = TitleBar
 
--- حقل اختيار الواجهة
-local GuiDropdown = Instance.new("TextBox")
-GuiDropdown.Size = UDim2.new(0.9, 0, 0, 35)
-GuiDropdown.Position = UDim2.new(0.05, 0, 0.13, 0)
-GuiDropdown.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-GuiDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
-GuiDropdown.Font = Enum.Font.Gotham
-GuiDropdown.TextSize = 13
-GuiDropdown.PlaceholderText = "Click 'Scan' to find GUIs..."
-GuiDropdown.Text = ""
-GuiDropdown.Parent = MainFrame
-Instance.new("UICorner", GuiDropdown).CornerRadius = UDim.new(0, 10)
+-- زر Select
+local SelectBtn = Instance.new("TextButton")
+SelectBtn.Size = UDim2.new(0.8, 0, 0, 35)
+SelectBtn.Position = UDim2.new(0.1, 0, 0.3, 0)
+SelectBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+SelectBtn.Text = "👆 Select GUI"
+SelectBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SelectBtn.Font = Enum.Font.GothamBold
+SelectBtn.TextSize = 14
+SelectBtn.Parent = MainFrame
+Instance.new("UICorner", SelectBtn).CornerRadius = UDim.new(0, 8)
 
--- زر المسح
-local ScanBtn = Instance.new("TextButton")
-ScanBtn.Size = UDim2.new(0.45, 0, 0, 35)
-ScanBtn.Position = UDim2.new(0.05, 0, 0.28, 0)
-ScanBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-ScanBtn.Text = "🔍 Scan GUIs"
-ScanBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ScanBtn.Font = Enum.Font.GothamBold
-ScanBtn.TextSize = 14
-ScanBtn.Parent = MainFrame
-Instance.new("UICorner", ScanBtn).CornerRadius = UDim.new(0, 10)
-
--- زر الاستخراج
-local ExtractBtn = Instance.new("TextButton")
-ExtractBtn.Size = UDim2.new(0.45, 0, 0, 35)
-ExtractBtn.Position = UDim2.new(0.5, 5, 0.28, 0)
-ExtractBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
-ExtractBtn.Text = "📥 Extract Code"
-ExtractBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ExtractBtn.Font = Enum.Font.GothamBold
-ExtractBtn.TextSize = 14
-ExtractBtn.Parent = MainFrame
-Instance.new("UICorner", ExtractBtn).CornerRadius = UDim.new(0, 10)
-
--- زر النسخ
+-- زر Copy All
 local CopyBtn = Instance.new("TextButton")
-CopyBtn.Size = UDim2.new(0.9, 0, 0, 35)
-CopyBtn.Position = UDim2.new(0.05, 0, 0.44, 0)
+CopyBtn.Size = UDim2.new(0.8, 0, 0, 35)
+CopyBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
 CopyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-CopyBtn.Text = "📋 Copy Extracted Code"
+CopyBtn.Text = "📋 Copy All"
 CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CopyBtn.Font = Enum.Font.GothamBold
 CopyBtn.TextSize = 14
 CopyBtn.Parent = MainFrame
-Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 8)
 
--- منطقة عرض الكود
-local CodeBox = Instance.new("ScrollingFrame")
-CodeBox.Size = UDim2.new(0.9, 0, 0, 130)
-CodeBox.Position = UDim2.new(0.05, 0, 0.55, 0)
-CodeBox.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-CodeBox.ScrollBarThickness = 4
-CodeBox.Parent = MainFrame
-Instance.new("UICorner", CodeBox).CornerRadius = UDim.new(0, 10)
-
-local CodeLabel = Instance.new("TextLabel")
-CodeLabel.Size = UDim2.new(1, -10, 0, 120)
-CodeLabel.Position = UDim2.new(0, 5, 0, 5)
-CodeLabel.BackgroundTransparency = 1
-CodeLabel.Text = "📄 Select a GUI and click Extract..."
-CodeLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
-CodeLabel.Font = Enum.Font.Gotham
-CodeLabel.TextSize = 11
-CodeLabel.TextWrapped = true
-CodeLabel.TextXAlignment = Enum.TextXAlignment.Left
-CodeLabel.TextYAlignment = Enum.TextYAlignment.Top
-CodeLabel.Parent = CodeBox
+-- نص الحالة
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(0.9, 0, 0, 20)
+StatusLabel.Position = UDim2.new(0.05, 0, 0.85, 0)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "🔹 Select a GUI"
+StatusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextSize = 11
+StatusLabel.Parent = MainFrame
 
 -- =====================================================
 -- السحب باللمس
@@ -156,129 +121,140 @@ end)
 -- =====================================================
 -- المتغيرات
 -- =====================================================
-local guiList = {}
-local extractedCode = ""
+local selectedGui = nil
+local extractedData = ""
 
 -- =====================================================
--- وظائف المسح والاستخراج
+-- وظيفة استخراج كل شيء من الواجهة
 -- =====================================================
-local function scanGUIs()
-    guiList = {}
-    local listText = ""
-
-    -- مسح PlayerGui
-    for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
-        if gui:IsA("ScreenGui") then
-            table.insert(guiList, gui)
-            listText = listText .. "📁 " .. gui.Name .. " (PlayerGui)\n"
-        end
-    end
-
-    -- مسح CoreGui
-    for _, gui in pairs(CoreGui:GetChildren()) do
-        if gui:IsA("ScreenGui") then
-            table.insert(guiList, gui)
-            listText = listText .. "📁 " .. gui.Name .. " (CoreGui)\n"
-        end
-    end
-
-    if #guiList > 0 then
-        GuiDropdown.Text = listText
-        GuiDropdown.PlaceholderText = "Select a GUI from the list..."
-        return true
-    else
-        GuiDropdown.Text = "❌ No GUIs found!"
-        return false
-    end
-end
-
-local function extractCode(gui)
-    local fullCode = ""
+local function extractAll(gui)
+    local data = ""
+    
+    data = data .. "-- GUI: " .. gui.Name .. "\n"
+    data = data .. "-- Path: " .. gui:GetFullName() .. "\n"
+    data = data .. "-- Class: " .. gui.ClassName .. "\n"
+    data = data .. "-- Properties:\n"
+    
+    -- الخصائص الأساسية
+    data = data .. "-- Size: " .. tostring(gui.Size) .. "\n"
+    data = data .. "-- Position: " .. tostring(gui.Position) .. "\n"
+    data = data .. "-- BackgroundColor3: " .. tostring(gui.BackgroundColor3) .. "\n"
+    data = data .. "-- BackgroundTransparency: " .. tostring(gui.BackgroundTransparency) .. "\n"
+    data = data .. "\n"
+    
+    -- الأكواد (LocalScripts و ModuleScripts)
     local scripts = {}
-
-    -- جمع كل الـ LocalScripts و ModuleScripts
     for _, obj in pairs(gui:GetDescendants()) do
         if obj:IsA("LocalScript") or obj:IsA("ModuleScript") then
             table.insert(scripts, obj)
         end
     end
-
-    if #scripts == 0 then
-        return "⚠️ No scripts found in this GUI."
+    
+    if #scripts > 0 then
+        data = data .. "-- Scripts (" .. #scripts .. "):\n"
+        for _, script in pairs(scripts) do
+            data = data .. "-- Script: " .. script.Name .. "\n"
+            data = data .. "-- Path: " .. script:GetFullName() .. "\n"
+            data = data .. script.Source .. "\n\n"
+        end
+    else
+        data = data .. "-- No scripts found in this GUI.\n"
     end
-
-    fullCode = "-- GUI: " .. gui.Name .. "\n"
-    fullCode = fullCode .. "-- Path: " .. gui:GetFullName() .. "\n\n"
-
-    for _, script in pairs(scripts) do
-        fullCode = fullCode .. "-- Script: " .. script.Name .. "\n"
-        fullCode = fullCode .. "-- Path: " .. script:GetFullName() .. "\n"
-        fullCode = fullCode .. script.Source .. "\n\n"
-    end
-
-    -- إضافة معلومات الأزرار
+    
+    -- الأزرار (TextButton, ImageButton)
     local buttons = {}
     for _, obj in pairs(gui:GetDescendants()) do
         if obj:IsA("TextButton") or obj:IsA("ImageButton") then
             table.insert(buttons, obj)
         end
     end
-
+    
     if #buttons > 0 then
-        fullCode = fullCode .. "-- Buttons:\n"
+        data = data .. "-- Buttons (" .. #buttons .. "):\n"
         for _, btn in pairs(buttons) do
-            fullCode = fullCode .. "-- " .. btn.Name .. " (Position: " .. tostring(btn.Position) .. ")\n"
+            data = data .. "-- Button: " .. btn.Name .. "\n"
+            data = data .. "--   Position: " .. tostring(btn.Position) .. "\n"
+            data = data .. "--   Size: " .. tostring(btn.Size) .. "\n"
+            data = data .. "--   Text: " .. (btn.Text or "None") .. "\n"
+            data = data .. "--   Class: " .. btn.ClassName .. "\n\n"
+        end
+    else
+        data = data .. "-- No buttons found in this GUI.\n"
+    end
+    
+    -- أي كائنات أخرى مهمة
+    local others = {}
+    for _, obj in pairs(gui:GetDescendants()) do
+        if not obj:IsA("LocalScript") and not obj:IsA("ModuleScript") and not obj:IsA("TextButton") and not obj:IsA("ImageButton") then
+            table.insert(others, obj)
         end
     end
-
-    return fullCode
+    
+    if #others > 0 then
+        data = data .. "-- Other Objects (" .. #others .. "):\n"
+        for _, obj in pairs(others) do
+            data = data .. "-- " .. obj.Name .. " (" .. obj.ClassName .. ")\n"
+        end
+    end
+    
+    return data
 end
 
 -- =====================================================
--- الأزرار
+-- زر Select (اختيار الواجهة باللمس)
 -- =====================================================
-ScanBtn.MouseButton1Click:Connect(function()
-    scanGUIs()
-    CodeLabel.Text = "📄 " .. #guiList .. " GUIs found. Select one and click Extract."
-end)
-
-ExtractBtn.MouseButton1Click:Connect(function()
-    -- اختيار أول GUI من القائمة (أو اللي المستخدم اختاره)
-    local selectedName = GuiDropdown.Text:match("📁 (.-) ")
-    if not selectedName then
-        CodeLabel.Text = "❌ No GUI selected! Please scan and choose one."
-        return
-    end
-
-    local selectedGui = nil
-    for _, gui in pairs(guiList) do
-        if gui.Name == selectedName then
-            selectedGui = gui
-            break
+SelectBtn.MouseButton1Click:Connect(function()
+    StatusLabel.Text = "👆 Tap on any GUI in the game..."
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+    
+    -- ننتظر المستخدم يختار واجهة
+    local connection
+    connection = Mouse.Button1Down:Connect(function()
+        local target = Mouse.Target
+        if not target then return end
+        
+        -- البحث عن الواجهة الأم (ScreenGui)
+        local gui = target
+        while gui and not gui:IsA("ScreenGui") do
+            gui = gui.Parent
         end
-    end
-
-    if not selectedGui then
-        CodeLabel.Text = "❌ GUI not found!"
-        return
-    end
-
-    extractedCode = extractCode(selectedGui)
-    CodeLabel.Text = extractedCode
-    CodeBox.CanvasSize = UDim2.new(0, 0, 0, #extractedCode / 2 + 50)
+        
+        if gui and gui:IsA("ScreenGui") and gui ~= ScreenGui then
+            selectedGui = gui
+            StatusLabel.Text = "✅ Selected: " .. gui.Name
+            StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+            
+            -- استخراج البيانات فوراً
+            extractedData = extractAll(gui)
+            print("📥 Extracted data from: " .. gui.Name)
+        else
+            StatusLabel.Text = "❌ Not a valid GUI. Try again."
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        end
+        
+        connection:Disconnect()
+    end)
 end)
 
+-- =====================================================
+-- زر Copy All
+-- =====================================================
 CopyBtn.MouseButton1Click:Connect(function()
-    if extractedCode ~= "" and extractedCode ~= "⚠️ No scripts found in this GUI." then
-        setclipboard(extractedCode)
-        CodeLabel.Text = "✅ Code copied to clipboard!"
+    if extractedData ~= "" then
+        setclipboard(extractedData)
+        StatusLabel.Text = "📋 All data copied!"
+        StatusLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
     else
-        CodeLabel.Text = "❌ No code to copy! Extract first."
+        StatusLabel.Text = "❌ No data to copy. Select a GUI first!"
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
     end
 end)
 
+-- =====================================================
+-- إغلاق
+-- =====================================================
 CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
-print("🧠 GUI Scanner is ready!")
+print("👆 GUI Picker & Extractor is ready!")
