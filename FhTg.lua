@@ -1,179 +1,196 @@
 -- =====================================================
--- 🛠 GUI PICKER & EXTRACTOR (FIXED VERSION)
+-- 🚀 SCREEN GUI PRO PICKER & EXTRACTOR (ULTIMATE)
 -- =====================================================
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local GuiService = game:GetService("GuiService")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- إنشاء الواجهة الخاصة بالأداة
+-- إنشاء واجهة الأداة
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "BetterGuiExtractor"
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Name = "UltimateGuiPicker"
+ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false
-ScreenGui.DisplayOrder = 999999 -- لضمان ظهورها فوق كل شيء
+ScreenGui.DisplayOrder = 1000000 -- أعلى من كل شيء في اللعبة
 
+-- إطار التحديد (المربع الذي سيظهر حول الزر الذي تختاره)
+local SelectionFrame = Instance.new("Frame")
+SelectionFrame.Name = "SelectionFrame"
+SelectionFrame.Size = UDim2.new(0, 0, 0, 0)
+SelectionFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+SelectionFrame.BackgroundTransparency = 0.7
+SelectionFrame.BorderSizePixel = 2
+SelectionFrame.BorderColor3 = Color3.fromRGB(255, 255, 255)
+SelectionFrame.Visible = false
+SelectionFrame.Parent = ScreenGui
+Instance.new("UIStroke", SelectionFrame).Thickness = 2
+
+-- القائمة الرئيسية
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 220, 0, 160)
-MainFrame.Position = UDim2.new(0.5, -110, 0.4, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Size = UDim2.new(0, 250, 0, 180)
+MainFrame.Position = UDim2.new(0.5, -125, 0.1, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true -- تفعيل السحب
+MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
-Instance.new("UICorner", MainFrame)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "🛠 GUI EXTRACTOR V2"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "🎯 UI SCREEN EXTRACTOR"
+Title.TextColor3 = Color3.white
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 14
 Title.Parent = MainFrame
 
--- زر الاختيار
+local Status = Instance.new("TextLabel")
+Status.Size = UDim2.new(1, 0, 0, 25)
+Status.Position = UDim2.new(0, 0, 0.8, 0)
+Status.Text = "Ready..."
+Status.TextColor3 = Color3.fromRGB(0, 255, 200)
+Status.BackgroundTransparency = 1
+Status.Font = Enum.Font.Gotham
+Status.Parent = MainFrame
+
+-- الأزرار
 local SelectBtn = Instance.new("TextButton")
 SelectBtn.Size = UDim2.new(0.9, 0, 0, 40)
 SelectBtn.Position = UDim2.new(0.05, 0, 0.25, 0)
-SelectBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
-SelectBtn.Text = "🎯 اضغط هنا ثم اختر GUI"
+SelectBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+SelectBtn.Text = "🖱️ Click to Select UI"
 SelectBtn.TextColor3 = Color3.white
 SelectBtn.Font = Enum.Font.GothamBold
 SelectBtn.Parent = MainFrame
 Instance.new("UICorner", SelectBtn)
 
--- زر النسخ
 local CopyBtn = Instance.new("TextButton")
 CopyBtn.Size = UDim2.new(0.9, 0, 0, 40)
-CopyBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
-CopyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-CopyBtn.Text = "📋 نسخ البيانات المستخرجة"
+CopyBtn.Position = UDim2.new(0.05, 0, 0.52, 0)
+CopyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+CopyBtn.Text = "📋 Copy Full Data"
 CopyBtn.TextColor3 = Color3.white
 CopyBtn.Font = Enum.Font.GothamBold
 CopyBtn.Parent = MainFrame
 Instance.new("UICorner", CopyBtn)
 
-local Status = Instance.new("TextLabel")
-Status.Size = UDim2.new(1, 0, 0, 20)
-Status.Position = UDim2.new(0, 0, 0.85, 0)
-Status.Text = "انتظار الاختيار..."
-Status.TextColor3 = Color3.fromRGB(200, 200, 200)
-Status.BackgroundTransparency = 1
-Status.Font = Enum.Font.Gotham
-Status.TextSize = 12
-Status.Parent = MainFrame
+-- =====================================================
+-- الوظائف البرمجية
+-- =====================================================
 
--- =====================================================
--- منطق الاستخراج (Extraction Logic)
--- =====================================================
-local extractedData = ""
 local isSelecting = false
+local lastExtractedData = ""
+local highlightedObject = nil
 
-local function getGuiPath(obj)
+-- وظيفة للحصول على المسار الكامل لأي شيء في الـ UI
+local function getFullPath(obj)
     local path = obj.Name
     local parent = obj.Parent
     while parent and parent ~= game do
         path = parent.Name .. "." .. path
         parent = parent.Parent
     end
-    return path
+    return "game." .. path
 end
 
-local function extractFullInfo(target)
-    local str = "-- [ GUI EXTRACTION REPORT ] --\n"
-    str = str .. "Target Name: " .. target.Name .. "\n"
-    str = str .. "Class: " .. target.ClassName .. "\n"
-    str = str .. "Full Path: game." .. getGuiPath(target) .. "\n\n"
+-- وظيفة لاستخراج كل المعلومات
+local function extractData(obj)
+    local data = "-- [ GUI EXTRACTED REPORT ] --\n"
+    data = data .. "Name: " .. obj.Name .. "\n"
+    data = data .. "Class: " .. obj.ClassName .. "\n"
+    data = data .. "Path: " .. getFullPath(obj) .. "\n\n"
     
-    str = str .. "-- [ PROPERTIES ] --\n"
-    pcall(function() str = str .. "Position: " .. tostring(target.Position) .. "\n" end)
-    pcall(function() str = str .. "Size: " .. tostring(target.Size) .. "\n" end)
-    pcall(function() str = str .. "Visible: " .. tostring(target.Visible) .. "\n" end)
-    
-    -- استخراج السكريبتات
-    str = str .. "\n-- [ SCRIPTS FOUND ] --\n"
-    local foundScripts = 0
-    for _, item in pairs(target:GetDescendants()) do
-        if item:IsA("LocalScript") or item:IsA("ModuleScript") then
-            foundScripts = foundScripts + 1
-            str = str .. "\n-- Script: " .. item.Name .. " (" .. item.ClassName .. ")\n"
-            -- ملاحظة: خاصية .Source تعمل فقط في المحاكيات (Executors) القوية
-            local success, source = pcall(function() return item.Source end)
+    data = data .. "-- [ PROPERTIES ] --\n"
+    pcall(function() data = data .. "Size: " .. tostring(obj.Size) .. "\n" end)
+    pcall(function() data = data .. "Position: " .. tostring(obj.Position) .. "\n" end)
+    if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+        data = data .. "Text: " .. obj.Text .. "\n"
+    end
+
+    -- البحث عن السكريبتات داخل هذا الـ UI
+    data = data .. "\n-- [ SCRIPTS INSIDE ] --\n"
+    local scripts = 0
+    for _, v in pairs(obj:GetDescendants()) do
+        if v:IsA("LocalScript") or v:IsA("ModuleScript") then
+            scripts = scripts + 1
+            data = data .. "-- Script: " .. v.Name .. " (" .. v.ClassName .. ")\n"
+            local success, source = pcall(function() return v.Source end)
             if success and source ~= "" then
-                str = str .. source .. "\n"
+                data = data .. source .. "\n\n"
             else
-                str = str .. "-- [Source Hidden or Not Accessible]\n"
+                data = data .. "-- [Source Locked or Hidden]\n\n"
             end
         end
     end
-    if foundScripts == 0 then str = str .. "No scripts found.\n" end
-
-    -- استخراج الأزرار
-    str = str .. "\n-- [ BUTTONS & INTERACTABLES ] --\n"
-    for _, item in pairs(target:GetDescendants()) do
-        if item:IsA("TextButton") or item:IsA("ImageButton") then
-            str = str .. "Button: " .. item.Name .. " | Text: " .. (item:IsA("TextButton") and item.Text or "N/A") .. "\n"
-        end
-    end
+    if scripts == 0 then data = data .. "No scripts found.\n" end
     
-    return str
+    return data
 end
 
--- =====================================================
--- تفعيل الاختيار (Selection Process)
--- =====================================================
+-- تفعيل وضع الاختيار
 SelectBtn.MouseButton1Click:Connect(function()
-    isSelecting = true
-    Status.Text = "🔴 اضغط الآن على أي مكان في الواجهة!"
-    Status.TextColor3 = Color3.fromRGB(255, 100, 100)
+    isSelecting = not isSelecting
+    if isSelecting then
+        SelectBtn.Text = "🔴 SELECTING... (Click UI)"
+        Status.Text = "Move mouse over any UI element"
+    else
+        SelectBtn.Text = "🖱️ Click to Select UI"
+        SelectionFrame.Visible = false
+    end
 end)
 
-UserInputService.InputBegan:Connect(function(input, processed)
-    if isSelecting and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-        local pos = input.Position
-        -- البحث عن كائنات الـ GUI في موقع الضغطة
-        local guis = LocalPlayer.PlayerGui:GetGuiObjectsAtPosition(pos.X, pos.Y)
+-- تتبع الماوس وتحديد الـ UI
+RunService.RenderStepped:Connect(function()
+    if isSelecting then
+        local mousePos = UserInputService:GetMouseLocation()
+        -- البحث عن كائنات GUI تحت الماوس
+        local objects = PlayerGui:GetGuiObjectsAtPosition(mousePos.X, mousePos.Y)
         
-        local target = nil
-        for _, v in pairs(guis) do
-            -- نتأكد أنه لا يختار واجهة الأداة نفسها
-            if not v:IsDescendantOf(ScreenGui) then
-                target = v
+        local found = nil
+        for _, obj in pairs(objects) do
+            -- تجاهل واجهة الأداة نفسها
+            if not obj:IsDescendantOf(ScreenGui) then
+                found = obj
                 break
             end
         end
         
-        if target then
-            -- نحاول الصعود لأعلى حاجب (Frame) أو (ScreenGui) للحصول على المعلومات كاملة
-            local root = target
-            if root.Parent:IsA("Frame") or root.Parent:IsA("ScrollingFrame") then
-                root = root.Parent
-            end
-            
-            extractedData = extractFullInfo(root)
-            Status.Text = "✅ تم استخراج: " .. root.Name
-            Status.TextColor3 = Color3.fromRGB(0, 255, 0)
+        if found then
+            highlightedObject = found
+            SelectionFrame.Visible = true
+            SelectionFrame.Position = found.AbsolutePosition
+            SelectionFrame.Size = UDim2.new(0, found.AbsoluteSize.X, 0, found.AbsoluteSize.Y)
+        else
+            SelectionFrame.Visible = false
+        end
+    end
+end)
+
+-- عند الضغط لاختيار الـ UI
+UserInputService.InputBegan:Connect(function(input)
+    if isSelecting and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+        if highlightedObject then
+            lastExtractedData = extractData(highlightedObject)
+            Status.Text = "✅ Selected: " .. highlightedObject.Name
             isSelecting = false
-            print(extractedData) -- طباعة في الكونسول للتأكيد
-        else
-            Status.Text = "❌ لم يتم العثور على GUI. حاول مجدداً."
+            SelectBtn.Text = "🖱️ Click to Select UI"
+            SelectionFrame.Visible = false
+            print(lastExtractedData)
         end
     end
 end)
 
+-- نسخ البيانات
 CopyBtn.MouseButton1Click:Connect(function()
-    if extractedData ~= "" then
-        if setclipboard then
-            setclipboard(extractedData)
-            Status.Text = "📋 تم النسخ إلى الحافظة!"
-        else
-            Status.Text = "❌ جهازك لا يدعم النسخ التلقائي."
-        end
+    if lastExtractedData ~= "" then
+        setclipboard(lastExtractedData)
+        Status.Text = "📋 Copied to clipboard!"
     else
-        Status.Text = "⚠️ اختر GUI أولاً!"
+        Status.Text = "⚠️ Select UI first!"
     end
 end)
 
-print("✅ GUI Extractor V2 Loaded!")
+print("✅ UI Picker Ready! Only for Screen Elements.")
